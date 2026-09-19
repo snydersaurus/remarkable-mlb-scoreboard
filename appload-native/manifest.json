@@ -1,0 +1,10 @@
+{
+    "id": "mlb-scoreboard",
+    "name": "MLB",
+    "loadsBackend": true,
+    "entry": "/ui/Main.qml",
+    "supportsScaling": true,
+    "canHaveMultipleFrontends": false,
+    "aspectRatio": "auto",
+    "disablesWindowedMode": true
+}

@@ -1,0 +1,12 @@
+<RCC>
+    <qresource>
+        <file>ui/Main.qml</file>
+        <file>ui/BaseDiamond.qml</file>
+        <file>ui/CountRow.qml</file>
+        <file>ui/LineScore.qml</file>
+        <file>ui/StatusStrip.qml</file>
+        <file>ui/Slate.qml</file>
+        <file>ui/GameCard.qml</file>
+        <file>ui/TeamPicker.qml</file>
+    </qresource>
+</RCC>
