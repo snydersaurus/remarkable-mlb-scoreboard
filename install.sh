@@ -49,6 +49,21 @@ scp -q "$HERE/mlb-scoreboard/manifest.json" "$HERE/mlb-scoreboard/icon.png" \
 scp -q "$HERE/mlb-scoreboard/backend/entry" "root@$RM_HOST:$APPDIR/backend/entry.new"
 ssh "root@$RM_HOST" "chmod +x $APPDIR/backend/entry.new && mv -f $APPDIR/backend/entry.new $APPDIR/backend/entry"
 
+# Will the tablet's dynamic linker accept it? Run it against a socket that does
+# not exist: it should reach its own connect failure. A loader error instead
+# means this build does not match the device's Qt, and through AppLoad that
+# looks like an app that never appears, with nothing in the log to say why.
+LOADED="$(ssh "root@$RM_HOST" "$APPDIR/backend/entry /tmp/appload-probe-none.sock 2>&1" || true)"
+case "$LOADED" in
+    *"not found"*|*"cannot open shared object"*)
+        echo
+        echo "$LOADED"
+        echo "This build does not match your tablet's Qt:"
+        ssh "root@$RM_HOST" 'ls -l /lib/libQt6Core.so.6'
+        echo "Rebuild against the matching SDK, e.g.:  IMAGE=rmpp-sdk-5.7 ./build.sh <sdk.sh>"
+        exit 1 ;;
+esac
+
 # The device restricts TLS 1.2 to ECDHE-ECDSA suites (SOG-IS, for EU-RED), and
 # statsapi.mlb.com serves an RSA certificate without TLS 1.3 -- no overlap, so
 # the handshake fails and every screen reads OFFLINE. This per-process config

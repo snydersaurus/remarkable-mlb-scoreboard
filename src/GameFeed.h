@@ -2,7 +2,7 @@
 
 #include <QObject>
 #include <QVariantMap>
-#include <QTimer>
+#include "WakeTimer.h"
 #include <QNetworkAccessManager>
 #include <QHash>
 #include <QJsonObject>
@@ -71,12 +71,16 @@ private:
     void loadDemoGame(const QString &demoState);
 
     int m_teamId;
+    // Wall-clock seconds at the last refresh, to notice the tablet having
+    // slept in between. See refresh().
+    qint64 m_lastRefresh = 0;
     qint64 m_gamePk = 0;
     bool m_pinned = false;
     QNetworkAccessManager m_net;
-    QTimer m_pollTimer;
-    QTimer m_scheduleTimer;
-    QTimer m_standingsTimer;
+    // Not QTimer: these have to survive the tablet sleeping. See WakeTimer.h.
+    WakeTimer m_pollTimer;
+    WakeTimer m_scheduleTimer;
+    WakeTimer m_standingsTimer;
     // teamId -> "1st AL Central". Standings move slowly; fetched twice an hour.
     QHash<int, QString> m_standing;
     QVariantMap m_state;

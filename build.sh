@@ -8,7 +8,12 @@
 set -euo pipefail
 
 SDK_SH="${1:?usage: ./build.sh /path/to/remarkable-ferrari-...-sdk.sh}"
-IMAGE="${IMAGE:-rmpp-sdk}"
+# The SDK has to MATCH THE DEVICE'S OS, not merely be newer. The tablet runs
+# 5.7.x, whose Qt is 6.8.2; an SDK carrying Qt 6.10 builds a binary the device
+# cannot load at all -- "version `Qt_6.10' not found" -- and through AppLoad
+# that shows up as an app that simply never appears.
+# Check with:  ssh root@<host> 'ls -l /lib/libQt6Core.so.6'
+IMAGE="${IMAGE:-rmpp-sdk-5.7}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 echo "==> staging SDK installer"

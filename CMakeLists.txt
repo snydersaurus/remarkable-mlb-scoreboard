@@ -15,6 +15,7 @@ add_executable(scoreboard_backend
     src/AppLoadLink.h
     src/GameFeed.cpp
     src/GameFeed.h
+    src/WakeTimer.h
     src/LogoStore.cpp
     src/LogoStore.h
 )

@@ -20,6 +20,14 @@ const char *kApi = "https://statsapi.mlb.com/api/v1";
 constexpr int kPollMs     = 15 * 1000;
 constexpr int kScheduleMs = 10 * 60 * 1000;
 
+// A request that never answers has to fail eventually, or the poll behind it
+// has nothing to retry. Qt sets no transfer timeout by default.
+constexpr int kTimeoutMs  = 20 * 1000;
+
+// More wall-clock than this between two polls means the tablet was asleep,
+// not that a request was slow.
+constexpr int kSleptSecs  = 90;
+
 // MLB keys its schedule to US Eastern dates, and the tablet's clock is UTC
 // (/etc/localtime -> Universal), so the device's own date rolls over at 8pm
 // Eastern -- in the middle of a night game. Ask in the zone the schedule is
@@ -70,18 +78,25 @@ GameFeed::GameFeed(int teamId, const QString &demoState, QObject *parent)
         return;
     }
 
+    // Measured on the device with the football app, which shares this design:
+    // after a fifteen minute suspend a reused keep-alive socket sat
+    // ESTABLISHED with 1761 bytes stuck in its send queue, retransmitting into
+    // a connection whose far end was long gone. Without a timeout that request
+    // hung forever and the board stopped updating.
+    m_net.setTransferTimeout(kTimeoutMs);
+
     qInfo("tls: supportsSsl=%d build=%s runtime=%s",
           QSslSocket::supportsSsl(),
           qPrintable(QSslSocket::sslLibraryBuildVersionString()),
           qPrintable(QSslSocket::sslLibraryVersionString()));
 
-    connect(&m_pollTimer, &QTimer::timeout, this, &GameFeed::refresh);
+    connect(&m_pollTimer, &WakeTimer::timeout, this, &GameFeed::refresh);
     m_pollTimer.start(kPollMs);
 
-    connect(&m_scheduleTimer, &QTimer::timeout, this, &GameFeed::requestSchedule);
+    connect(&m_scheduleTimer, &WakeTimer::timeout, this, &GameFeed::requestSchedule);
     m_scheduleTimer.start(kScheduleMs);
 
-    connect(&m_standingsTimer, &QTimer::timeout, this, &GameFeed::requestStandings);
+    connect(&m_standingsTimer, &WakeTimer::timeout, this, &GameFeed::requestStandings);
     m_standingsTimer.start(30 * 60 * 1000);
 
     requestSchedule();
@@ -185,6 +200,19 @@ void GameFeed::requestSchedule()
 
 void GameFeed::refresh()
 {
+    // TCP connections do not survive the tablet sleeping, but Qt does not know
+    // that and will reuse one from its keep-alive pool. If more time has
+    // passed than a poll interval can explain, assume we were asleep and throw
+    // the pool away rather than write into a dead socket.
+    const qint64 now = QDateTime::currentSecsSinceEpoch();
+    if (m_lastRefresh > 0 && (now - m_lastRefresh) > kSleptSecs) {
+        qInfo("woke after %lld s -- dropping stale connections",
+              static_cast<long long>(now - m_lastRefresh));
+        m_net.clearConnectionCache();
+    }
+    m_lastRefresh = now;
+
+
     requestSlate();
     if (m_gamePk == 0) {
         requestSchedule();

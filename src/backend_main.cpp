@@ -38,6 +38,7 @@ constexpr quint32 MsgShowGame    = 2;   // contents: gamePk
 constexpr quint32 MsgShowTeam    = 3;   // back to the followed team
 constexpr quint32 MsgGeometry    = 4;   // frontend reporting its window size
 constexpr quint32 MsgSetTeam     = 5;   // contents: teamId to follow
+constexpr quint32 MsgRefresh     = 6;   // the app is back on screen; refetch now
 
 // Deliberately outside the app directory: a package upgrade replaces
 // /home/root/xovi/exthome/appload/<app>/ wholesale, and a reinstall should not
@@ -258,6 +259,9 @@ int main(int argc, char *argv[])
         }
         case MsgShowTeam:
             feed.showTeamGame();
+            break;
+        case MsgRefresh:
+            feed.refresh();
             break;
         case MsgGeometry:
             qInfo("frontend window: %s", payload.constData());

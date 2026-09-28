@@ -26,12 +26,23 @@ Item {
     onWidthChanged: reportGeometry()
     onHeightChanged: reportGeometry()
 
+    // Ask for fresh data the moment the app is on screen again, rather than
+    // waiting up to a poll interval to notice. AppLoad keeps a frontend loaded
+    // when you close the window, so Component.onCompleted does not run a
+    // second time and the backend would otherwise hear nothing about you
+    // coming back.
+    onVisibleChanged: {
+        if (visible)
+            appload.sendMessage(root.msgRefresh, "")
+    }
+
     readonly property int msgGeometry: 4
     readonly property int msgSetTeam:  5
     readonly property int msgState:    101
     readonly property int msgHello:    1
     readonly property int msgShowGame: 2
     readonly property int msgShowTeam: 3
+    readonly property int msgRefresh:  6
 
     // Whole application state, pushed by the backend.
     property var s: ({})
