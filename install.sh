@@ -67,7 +67,7 @@ esac
 # The device restricts TLS 1.2 to ECDHE-ECDSA suites (SOG-IS, for EU-RED), and
 # statsapi.mlb.com serves an RSA certificate without TLS 1.3 -- no overlap, so
 # the handshake fails and every screen reads OFFLINE. This per-process config
-# restores the default cipher list for the backend only.
+# adds the ECDHE-RSA AEAD suites for the backend only.
 echo "==> installing the TLS config"
 scp -q "$HERE/openssl-scoreboard.cnf" "root@$RM_HOST:/home/root/openssl-scoreboard.cnf"
 

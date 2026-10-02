@@ -6,9 +6,12 @@
 # not speak TLS 1.3, so it needs ECDHE-RSA -- there is no overlap, and the
 # handshake dies with "tls alert handshake failure".
 #
-# This restores OpenSSL's default cipher list for this process only. It does
-# not touch system-wide TLS policy, and it keeps the TLS 1.2 floor: the cipher
-# actually negotiated is ECDHE-RSA-AES128-GCM-SHA256.
+# This is the system list plus the three forward-secret AEAD suites for RSA
+# certificates, for this process only. It does not touch system-wide TLS
+# policy, keeps the TLS 1.2 floor and the TLS 1.3 suites, and still excludes
+# CBC suites and anything without forward secrecy (which Ciphersuites = TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256
+CipherString = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-CCM:ECDHE-ECDSA-AES128-CCM:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20-POLY1305
+# would admit). The cipher actually negotiated is ECDHE-RSA-AES128-GCM-SHA256.
 openssl_conf = openssl_init
 
 [ openssl_init ]
@@ -19,4 +22,5 @@ system_default = system_default_tls
 
 [ system_default_tls ]
 MinProtocol = TLSv1.2
-CipherString = DEFAULT
+Ciphersuites = TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256:TLS_AES_128_CCM_SHA256
+CipherString = ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-CCM:ECDHE-ECDSA-AES128-CCM:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20-POLY1305

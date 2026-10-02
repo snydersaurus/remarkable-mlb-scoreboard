@@ -98,8 +98,10 @@ serves an **RSA** certificate and does not support TLS 1.3, so there is no
 overlap and the handshake fails with `tls alert handshake failure`.
 
 `install.sh` puts a small per-process OpenSSL config on the device and the
-backend points `OPENSSL_CONF` at it, restoring the default cipher list for this
-one process. System-wide TLS policy is untouched.
+backend points `OPENSSL_CONF` at it. The config is the system list plus the
+three forward-secret AEAD suites for RSA certificates (ECDHE-RSA with AES-GCM or
+ChaCha20), for this one process. System-wide TLS policy is untouched, and CBC
+suites and suites without forward secrecy stay excluded.
 
 Busybox `wget` works on the device because it has its own TLS stack — so do not
 use it to conclude the network is fine.

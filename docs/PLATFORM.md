@@ -171,8 +171,10 @@ serves an RSA certificate and does not support TLS 1.3 has no overlap, and the
 handshake dies with `tls alert handshake failure`.
 
 - `statsapi.mlb.com` **is** blocked by this. Run with
-  `OPENSSL_CONF=/home/root/openssl-scoreboard.cnf`, which restores the default
-  cipher list for that process only. Set it with `qputenv` inside the backend
+  `OPENSSL_CONF=/home/root/openssl-scoreboard.cnf`, which adds the three
+  ECDHE-RSA AEAD suites to the system list for that process only (not
+  `CipherString = DEFAULT`, which would also admit CBC and non-forward-secret
+  suites). Set it with `qputenv` inside the backend
   before anything touches OpenSSL, not via the manifest.
 - ESPN's APIs are **not** — they negotiate TLS 1.3. Setting `OPENSSL_CONF`
   anyway is harmless (a missing file is ignored) and cheap insurance.
